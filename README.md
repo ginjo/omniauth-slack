@@ -264,7 +264,7 @@ Options for `scope`, `team`, `team_domain`, and `redirect_uri` can also be given
 The `team_domain` query parameter will be inserted into the authorization GET request
 as a subdomain `https://team-domain.slack.com/oauth/authorize`.
 
-**NOTE:** Allowing `redirect_uri`, `scope`, or `team_domian` to be passed to Slack from your application's public interface (`https://myapp.com/auth/slack?scope=...`) is a potential security risk. As of omniauth-slack version 2.5.0, the default is to NOT allow `scope`, `redirect_uri`, or `team_domain` pass-through options at runtime, *unless* they are listed in the `:pass_through_params` option. The `team` param is allowed to pass through as a default.
+**NOTE:** Allowing `redirect_uri`, `scope`, or `team_domain` to be passed to Slack from your application's public interface (`https://myapp.com/auth/slack?scope=...`) is a potential security risk. As of omniauth-slack version 2.5.0, the default is to NOT allow `scope`, `redirect_uri`, or `team_domain` pass-through options at runtime, *unless* they are listed in the `:pass_through_params` option. The `team` param is allowed to pass through as a default.
 
 To block all pass-through options.
 
@@ -383,7 +383,7 @@ To extract data from the API response, call `parsed` on the response object.
 
 Each Successful OmniAuth authorization places an
 [AuthHash](https://github.com/omniauth/omniauth/wiki/Auth-Hash-Schema) object in the environment `env['omniauth.auth']`.
-The AuthHash is just an enhanced hash object containing data from the[OAuth2](https://github.com/oauth-xx/oauth2)
+The AuthHash is just an enhanced hash object containing data from the [OAuth2](https://github.com/oauth-xx/oauth2)
 response received from the get-token API call made during the OmniAuth callback phase.
 See OmniAuth's documentation for the AuthHash schema definition.
 

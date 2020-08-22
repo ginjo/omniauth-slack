@@ -28,7 +28,7 @@ module OmniAuth
         #   @access_token.client.history = @auth_hash.extra.raw_info
         #
         # TODO: The above seems a little messy. Maybe use a proc
-        #       to rediredct Client request history to wherever.
+        #       to redirect Client request history to wherever.
         #       Or maybe don't offer any history storage at all.
         #
         HISTORY_DEFAULT=nil
