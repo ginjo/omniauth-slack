@@ -184,7 +184,7 @@ module OmniAuth
       def client
         @client ||= (
           team_domain = (pass_through_params.include?('team_domain') && request.params['team_domain']) ? request.params['team_domain'] : options.team_domain
-          new_client = OmniAuth::Slack::OAuth2::Client.new(options.client_id, options.client_secret, deep_symbolize(options.client_options.merge({subdomain:team_domain})))
+          new_client = OmniAuth::Slack::OAuth2::Client.new(options.client_id, options.client_secret, **deep_symbolize(options.client_options.merge({subdomain:team_domain})))
   
           debug{"Strategy #{self} using Client #{new_client} with callback_url #{callback_url}"}
           
