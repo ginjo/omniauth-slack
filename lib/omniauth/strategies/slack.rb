@@ -9,9 +9,9 @@ require 'uri'
 
 module OmniAuth
   using Slack::OAuth2Refinements
-  
+
   module Strategies
-  
+
     # This is the OmniAuth strategy for Slack.
     # It is used as Rack middleware.
     #
@@ -20,24 +20,24 @@ module OmniAuth
     #     end
     #
     class Slack < OmniAuth::Strategies::OAuth2
-      include OmniAuth::Slack::Debug 
-      
-      
+      include OmniAuth::Slack::Debug
+
+
       ###  Options  ###
 
       # Master list of authorization options handled by omniauth-slack.
       # See below for redirect_uri.
-      # 
+      #
       AUTH_OPTIONS = %i(scope user_scope team team_domain)
-      
+
       debug{"#{self} setting up default options"}
-      
+
       # Default strategy name
       option :name, 'slack'
-      
+
       # Options that can be passed with provider authorization URL.
       option :authorize_options, AUTH_OPTIONS - %i(team_domain)
-      
+
       # OAuth2::Client options.
       option :client_options, {
         site: 'https://slack.com',
@@ -47,7 +47,7 @@ module OmniAuth
         raise_errors: false, # MUST be false to allow Slack's get-token response from v2 API.
         history: Array.new,
       }
-      
+
       # Authorization token-exchange API call options.
       option :auth_token_params, {
         mode: :query,
@@ -56,20 +56,20 @@ module OmniAuth
 
 
       ###  Omniauth Slack custom options  ###
-      
+
       # redirect_uri does not need to be in authorize_options,
       # since it inserted anyway by omniauth-oauth2 during both
       # the request (authorization) phase and the callback (get-token) phase.
       # The magic of redirect_uri actually happens in the callback_url method.
       option :redirect_uri
-      
+
       # Options allowed to pass from omniauth /auth/<provider> URL
       # to provider authorization URL.
       option :pass_through_params, %i(team)
-    
+
 
       ###  Data  ###
-      
+
       # User ID is not guaranteed to be globally unique across all Slack users.
       # The combination of user ID and team ID, on the other hand, is guaranteed
       # to be globally unique.
@@ -150,7 +150,7 @@ module OmniAuth
           session['omniauth.authorize_params'] = prms
         end
       end
-      
+
       # Pre-sets env vars for super.
       #
       # OmniAuth callback phase to extract session var for
@@ -162,7 +162,7 @@ module OmniAuth
         env['omniauth.authorize_params'] = session.delete('omniauth.authorize_params')
         super
       end
-      
+
       # Returns OmniAuth::Slack::AuthHash
       #
       # Super result is converted to plain hash first,
@@ -171,7 +171,7 @@ module OmniAuth
       def auth_hash
         OmniAuth::Slack::AuthHash.new super.to_hash
       end
-      
+
       # Uses `OmniAuth::Slack::OAuth2::Client` to handle Slack-specific features.
       #
       # * Logs API requests with OmniAuth.logger.
@@ -185,9 +185,9 @@ module OmniAuth
         @client ||= (
           team_domain = (pass_through_params.include?('team_domain') && request.params['team_domain']) ? request.params['team_domain'] : options.team_domain
           new_client = OmniAuth::Slack::OAuth2::Client.new(options.client_id, options.client_secret, deep_symbolize(options.client_options.merge({subdomain:team_domain})))
-  
+
           debug{"Strategy #{self} using Client #{new_client} with callback_url #{callback_url}"}
-          
+
           new_client
         )
       end
@@ -198,18 +198,18 @@ module OmniAuth
       def callback_url
         options.redirect_uri || full_host + script_name + callback_path
       end
-      
+
       ### Possibly obsolete
       #
       #   def user_id
       #     # access_token['user_id'] || access_token['user'].to_h['id'] || access_token['authorizing_user'].to_h['user_id']
       #     access_or_user_token&.user_id
       #   end
-      # 
+      #
       #   def team_id
       #     access_token&.team_id
       #   end
-      
+
       # Gets and decodes :pass_through_params option.
       #
       def pass_through_params
@@ -244,13 +244,13 @@ module OmniAuth
         debug{"Retrieved raw_info (size #{@raw_info.size}) (object_id #{@raw_info.object_id})"}
         @raw_info
       end
-      
+
       # Gets 'authed_user' sub-token from main access token.
       #
       def user_token
         access_token&.user_token
       end
-      
+
       # Gets main access_token, if valid, otherwise gets user_token, if valid.
       # Handles Slack v1 and v2 API (v2 is non-conformant with OAUTH2 spec).
       def access_or_user_token
@@ -262,14 +262,14 @@ module OmniAuth
           access_token
         end
       end
-      
+
       def scopes_requested
         # omniauth.authorize_params is an enhancement to omniauth functionality for omniauth-slack.
         out = {
           scope: env['omniauth.authorize_params'].to_h['scope'],
           user_scope: env['omniauth.authorize_params'].to_h['user_scope']
         }
-        
+
         debug{"scopes_requested: #{out}"}
         return out
       end
@@ -277,4 +277,3 @@ module OmniAuth
     end # Slack
   end # Strategies
 end # OmniAuth
-

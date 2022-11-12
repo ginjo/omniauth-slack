@@ -8,9 +8,9 @@ module OmniAuth
   module Slack
     using StringRefinements
     using OAuth2Refinements
-    
+
     module OAuth2
-    
+
       # This is an enhanced subclass of OAuth2::AccessToken.
       # It handles Slack-specific data and behavior, and it also adds
       # a scope-query method has_scope?
@@ -33,9 +33,9 @@ module OmniAuth
       # * https://api.slack.com/methods/oauth.access
       # * https://api.slack.com/methods/oauth.v2.access
       #
-      class AccessToken < ::OAuth2::AccessToken        
+      class AccessToken < ::OAuth2::AccessToken
         include OmniAuth::Slack::Debug
-        
+
         # Creates simple getter methods to pull specific data from the raw token hash.
         def self.define_getters(ary_of_words)
           ary_of_words.each do |word|
@@ -50,7 +50,7 @@ module OmniAuth
             end
           end
         end
-        
+
         define_getters %w(
           app_id
           authorizing_user
@@ -63,17 +63,17 @@ module OmniAuth
           team_domain
           user
         )
-        
+
         # Check's the token hash 'ok' field.
         #
         # Returns true or false, representing the success status of the token response.
-        # 
+        #
         def ok?
           params['ok'] == true ||
           params['ok'].to_s[/true/i] ||
           false
         end
-             
+
         # Intercepts super to return nil instead of an empty string.
         #
         # Returns the token string or nil.
@@ -82,7 +82,7 @@ module OmniAuth
           rslt = super
           rslt.to_s == '' ? nil : rslt
         end
-        
+
         # Inspects the token and determines token type.
         #
         # Returns a string representing token type.
@@ -90,7 +90,7 @@ module OmniAuth
         def token_type
           params['token_type'] ||
           case
-            when 
+            when
               params['token_type'] == 'user' ||
               @token.to_s[/xoxp/]; 'user'
             when
@@ -103,7 +103,7 @@ module OmniAuth
               @token.to_s[/xoxr/]; 'refresh'
           end
         end
-        
+
         # Compares given token type with actual token_type.
         #
         # Returns true if given type matches actual token_type, otherwise false.
@@ -114,7 +114,7 @@ module OmniAuth
             token_type.to_s == t.to_s
           end || false
         end
-        
+
         # Converts 'authed_user' hash (of Slack v2 oauth flow) to AccessToken object.
         #
         # Returns an AccessToken instance or nil.
@@ -157,7 +157,7 @@ module OmniAuth
           debug { rslt }
           rslt
         end
-        
+
         # Gets the AccessToken unique user-team-id combo, if it can be determined.
         #
         # Returns string or nil.
@@ -167,7 +167,7 @@ module OmniAuth
           debug { rslt }
           rslt
         end
-        
+
         # Gets user_name from wherever it can be found in the returned token,
         # regardless of what type of token is returned.
         #
@@ -189,7 +189,7 @@ module OmniAuth
           to_auth_hash.deep_find('nickname') ||
           to_auth_hash.deep_find('real_name')
         end
-        
+
         # Gets bot_user_id if it exists.
         #
         # Returns string or nil.
@@ -197,7 +197,7 @@ module OmniAuth
         def bot_user_id
           params['bot_user_id']
         end
-        
+
         # Gets the app_user_id if it exists.
         #
         # Returns string or nil.
@@ -205,7 +205,7 @@ module OmniAuth
         def app_user_id
           params['app_user_id']
         end
-        
+
         # Experimental, converts this AccessToken instance to an AuthHash object.
         #
         # Returns OmniAuth::Slack::AuthHash instance.
@@ -230,7 +230,7 @@ module OmniAuth
           )
         end
         alias_method :scopes, :all_scopes
-        
+
         # Match a given set of scopes against this token's awarded scopes,
         # classic and workspace token compatible.
         #
@@ -259,26 +259,26 @@ module OmniAuth
         def has_scope?(*freeform_array, query: nil, logic:'or', user:nil, base:nil, **freeform_hash)
           #OmniAuth.logger.debug({freeform_array:freeform_array, freeform_hash:freeform_hash, query:query, logic:logic, user:user, base:base})
           debug{{freeform_array:freeform_array, freeform_hash:freeform_hash, query:query, logic:logic, user:user, base:base}}
-          
+
           query ||= case
             #when simple_string; {classic: simple_string}
             when freeform_array.any?; freeform_array
             when freeform_hash.any?; freeform_hash
           end
           return unless query
-          
+
           query = [query].flatten if query.is_a?(Array) || query.is_a?(String)
-          
+
           user ||= user_id
           debug{"using user '#{user}' and query '#{query}'"}
-          
+
           is_identity_query = case query
             when Hash
               query.keys.detect{|k| k.to_s == 'identity'}
             when Array
               query.detect{ |q| q.is_a?(Hash) && q.keys.detect{|k| k.to_s == 'identity'} }
           end
-          
+
           base ||= case
             when user && is_identity_query
               #debug{"calling all_scopes(user=#{user}) to build base-scopes"}
@@ -287,11 +287,11 @@ module OmniAuth
               #debug{"calling all_scopes to build base-scopes"}
               all_scopes
           end
-          
+
           #debug{{freeform_array:freeform_array, freeform_hash:freeform_hash, query:query, logic:logic, user:user, base:base}}
           self.class.has_scope?(scope_query:query, scope_base:base, logic:logic)
         end
-        
+
         # Matches the given scope_query against the given scope_base, with the given logic.
         #
         # This is classic and workspace token compatible.
@@ -303,7 +303,7 @@ module OmniAuth
         #
         #                 key     - Symbol of scope type, can be:
         #                         [app_home|team|channel|group|mpim|im|identity|classic].
-        #                 
+        #
         #                 value   - Array or String of individual scopes.
         #
         # :scope_base   - [Hash] defaul: {}, represents the set of scopes to query against.
@@ -313,7 +313,7 @@ module OmniAuth
         #                 The reverse logic is applied to an array of query hashes.
         #
         # Examples
-        #                 
+        #
         #   has_scope?(scope_query: {channel: 'channels:read chat:write'})
         #   has_scope?(scope_query: [{identity:'uers:read', channel:'chat:write'}, {app_home:'chat:write'}], logic:'and')
         #   has_scope?(scope_query: 'identity:users identity:team identity:avatar')
@@ -322,7 +322,7 @@ module OmniAuth
           debug{"class-level scope_query '#{scope_query}' scope_base '#{scope_base}' logic '#{logic}'"}
           _scope_query = scope_query.is_a?(String) ? {classic: scope_query} : scope_query
           _scope_query = [_scope_query].flatten
-          
+
           # Converts array of unknown strings to uniform hash of classic:[array-of-scope-strings].
           if _scope_query.is_a?(Array)
             new_query = []
@@ -340,12 +340,12 @@ module OmniAuth
             end
             _scope_query = new_query
           end
-          
+
           _scope_base  = scope_base
           raise "scope_base must be a hash" unless (_scope_base.is_a?(Hash) || _scope_base.respond_to?(:to_h))
-          
+
           out=false
-          
+
           _logic = case
             when logic.to_s.downcase == 'or'; {outter: 'all?', inner: 'any?'}
             when logic.to_s.downcase == 'and'; {outter: 'any?', inner: 'all?'}
@@ -353,7 +353,7 @@ module OmniAuth
           end
           debug{"_logic #{_logic.inspect}"}
           debug{"_scope_query #{_scope_query}"}
-          
+
           _scope_query.send(_logic[:outter]) do |query|
             debug{"outter query: #{_scope_query.inspect}"}
 
@@ -363,19 +363,17 @@ module OmniAuth
                 when scopes.is_a?(Array); scopes
                 else raise "Scope data must be a string or array of strings, like this {team: 'chat:write,team:read', channels: ['channels:read', 'chat:write']}"
               end
-              
+
               test_scopes.send(_logic[:inner]) do |scope|
                 debug{"inner query section: #{section.to_s}, scope: #{scope}"}
                 out = _scope_base.to_h[section.to_s].to_a.include?(scope.to_s)
               end
             end
-            
           end # scope_query.send outter-query
           debug{"output: #{out}"}
           return out
-          
         end # self.has_scope?
-        
+
       end # AccessToken
     end
   end

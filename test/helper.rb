@@ -90,4 +90,3 @@ require 'shared_examples'
 
 #require_relative 'support/shared_examples.rb'
 #Dir[File.expand_path("../**/*.rb", __FILE__)].each(&method(:require))
-

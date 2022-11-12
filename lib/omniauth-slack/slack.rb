@@ -23,11 +23,11 @@ module OmniAuth
         when token_string_or_hash.is_a?(Hash)
           OmniAuth::Slack::OAuth2::AccessToken.from_hash(client, token_string_or_hash)
       end
-      
+
       access_token
     end
-    
-    
+
+
     # Rack middleware to verify incoming slack request signature.
     #
     #   use OmniAuth::Slack::VerifySlackSignature
@@ -37,16 +37,16 @@ module OmniAuth
     #
     class VerifySlackSignature
       include OmniAuth::Slack::Debug
-      
+
       attr_accessor :app_id, :signing_secret
 
       def initialize(app)
         @app             = app
         @app_id          = nil
         @signing_secret  = nil
-        
+
         middleware_instance = self
-        
+
         if block_given?
           # Can set app_id and signing_secret from here.
           yield(middleware_instance)
@@ -56,66 +56,65 @@ module OmniAuth
       def call(env)
         @env = env
         @logger = logger = OmniAuth.logger
-                
+
         debug{"calling middleware"}
 
         env['rack.input'].rewind
         body_string = env['rack.input'].read
         env['rack.input'].rewind
-        
+
         debug{"VerifySlackSignature body_string: #{body_string}"}
-        
+
         body_hash =
           begin
             body_string && JSON.load(body_string)
           rescue
             {}
           end
-        
+
         if body_hash.to_a.size == 0
           debug{"not detecting JSON body"}
           pass
-          
+
         else
           api_app_id      = body_hash['api_app_id']
           slack_signature = env['HTTP_X_SLACK_SIGNATURE']
           slack_timestamp = env['HTTP_X_SLACK_REQUEST_TIMESTAMP']
-          
+
           if ! [api_app_id, slack_signature, slack_timestamp].all?
             logger.debug("(slack) VerifySlackSignature not detecting incoming Slack request")
             pass
-            
+
           elsif signing_secret.to_s.empty?
             logger.info("(slack) VerifySlackSignature missing signing_secret")
             pass
-            
+
           elsif app_id && app_id.to_s != api_app_id.to_s
             logger.info("(slack) VerifySlackSignature app_id mismatch")
             pass
-            
+
           else
             computed_signature = 'v0=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha256'), signing_secret, "v0:#{slack_timestamp}:#{body_string}").to_s
             rslt = (slack_signature == computed_signature)
-            
+
             if rslt
               logger.info("(slack) VerifySlackSignature: #{rslt}")
             else
               logger.info("(slack) VerifySlackSignature: #{rslt}  (slack: #{slack_signature}, computed: #{computed_signature})")
             end
-            
+
             pass rslt
           end
         end
       end
-      
+
       def pass(result = nil)
         @env['omniauth.slack.verification'] = result
         debug{"set env omniauth.slack.verification to: #{result}"}
         @app.call(@env)
       end
-      
+
     end  # VerifySlackSignature
-    
+
   end
 end
-

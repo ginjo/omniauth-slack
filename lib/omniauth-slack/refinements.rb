@@ -9,7 +9,7 @@ require 'omniauth-slack/omniauth/auth_hash'
 
 module OmniAuth
   module Slack
-        
+
     module OAuth2Refinements
       refine ::OAuth2::Response do
         def to_auth_hash
@@ -43,7 +43,7 @@ module OmniAuth
         end
       end
     end
-    
+
     module StringRefinements
       refine String do
         def words
@@ -57,12 +57,11 @@ module OmniAuth
         #caller[0][/`([^']*)'/, 1] # This gets the method name only 1 level up.
         caller[1][/`([^']*)'/, 1]  # This gets the method name 2 levels up.
       end
-      
+
       def self.included(other)
         other.send(:extend, CallerMethodName)
       end
     end
-      
+
   end # Slack
 end # OmniAuth
-
